@@ -3,11 +3,14 @@ from math import ceil
 import pandas as pd
 import plotly.express as px
 
-CW = 0.21
-CR = 120.96
 RO = 1.204
+
+CW = 0.33
+CR = 0.006
+
+WEIGHT = 2055
+FG = 9.81
 AREA = 2.28
-FR = 0.006
 ETA = 0.93
 CAPACITY = 85
 P_ADDDITIONAL = 1300
@@ -19,7 +22,7 @@ def kmh_to_ms(v: float) -> float:
 
 def get_consumption(v_ms: float) -> float:
   """[kwh/km]."""
-  p_roll = CR * v_ms
+  p_roll = CR * FG * WEIGHT * v_ms
   f_air = (RO / 2) * v_ms * v_ms * CW * AREA
   p_air = f_air * v_ms
   hours = ((1 / v_ms) * 1000 * 100) / 3600
