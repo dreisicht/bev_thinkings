@@ -10,20 +10,21 @@ AREA = 2.28
 FR = 0.006
 ETA = 0.93
 CAPACITY = 85
+P_ADDDITIONAL = 1300
 
 
 def kmh_to_ms(v: float) -> float:
   return v / 3.6
 
 
-def get_consumption(v_ms: float, p_additional: float = 1300) -> float:
+def get_consumption(v_ms: float) -> float:
   """[kwh/km]."""
   p_roll = CR * v_ms
   f_air = (RO / 2) * v_ms * v_ms * CW * AREA
   p_air = f_air * v_ms
   hours = ((1 / v_ms) * 1000 * 100) / 3600
   driving_energy = ((p_roll + p_air) * hours) * (1 / ETA)  # Wh
-  total_energy = driving_energy + (p_additional * hours)  # Wh
+  total_energy = driving_energy + (P_ADDDITIONAL * hours)  # Wh
   return total_energy / 1000  # kWh / 100km
 
 
@@ -54,7 +55,19 @@ def get_optimal_speed_kmh(
     consumptions.append(get_consumption(kmh_to_ms(speed)))
 
   df = pd.DataFrame({"speed": speeds, "time": times, "consumption": consumptions})
-  fig = px.scatter(df, x="speed", y="time", color="consumption")
+  fig = px.scatter(
+    df,
+    x="speed",
+    y="time",
+    color="consumption",
+    labels={
+      "speed": "Travel speed [km/h]",
+      "time": "Total trip time [h]",
+      "consumption": "Energy consumption [kWh/100km]",
+    },
+    hover_data={"speed": ":.1f", "time": ":.2f", "consumption": ":.2f"},
+    title="Total travel time over speed",
+  )
   fig.update_layout(legend_title="Legend", showlegend=True)
   fig.show()
 
