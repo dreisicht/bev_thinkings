@@ -5,7 +5,7 @@ import plotly.express as px
 
 RO = 1.204
 
-CW = 0.33
+CW = 0.21
 CR = 0.006
 
 WEIGHT = 2055
