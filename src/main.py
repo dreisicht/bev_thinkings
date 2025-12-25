@@ -31,13 +31,13 @@ def get_consumption(v_ms: float) -> float:
   return total_energy / 1000  # kWh / 100km
 
 
-def get_optimal_speed_kmh(
+def plot_speed_vs_duration(
   soc_start: float,
   distance_km: float,
   charging_power_kw: float,
   charging_penalty_time_h: float = 0.2,  # 6 mins overhead
 ) -> float:
-  def total_time_objective(v_kmh: float) -> float:
+  def get_duration(v_kmh: float) -> float:
     driving_time_h = distance_km / v_kmh
     energy_needed_kwh = (get_consumption(kmh_to_ms(v_kmh)) * distance_km) / 100
     energy_start_kwh = soc_start * CAPACITY
@@ -54,7 +54,7 @@ def get_optimal_speed_kmh(
   consumptions = []
   for speed in range(45, 211):
     speeds.append(speed)
-    times.append(total_time_objective(speed))  # hours
+    times.append(get_duration(speed))  # hours
     consumptions.append(get_consumption(kmh_to_ms(speed)))
 
   df = pd.DataFrame({"speed": speeds, "time": times, "consumption": consumptions})
@@ -76,8 +76,8 @@ def get_optimal_speed_kmh(
 
 
 if __name__ == "__main__":
-  get_optimal_speed_kmh(
+  plot_speed_vs_duration(
     soc_start=1,
-    distance_km=640,
+    distance_km=1000,
     charging_power_kw=230,
   )
