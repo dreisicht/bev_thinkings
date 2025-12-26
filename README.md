@@ -3,7 +3,7 @@
 This utility calculates the total travel time over speed for BEVs.
 
 Example:
-<iframe src="plot.html" width="100%" height="500px"></iframe>
+![plot](plot.jpeg)
 
 ## How to run
 ```

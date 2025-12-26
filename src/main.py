@@ -34,6 +34,14 @@ class Car:
   charging_power: int
 
 
+@dataclass
+class Trip:
+  distance_km: float
+  charging_penalty_time_h: float
+  soc_start: float
+  soc_end: float
+
+
 def kmh_to_ms(v: float) -> float:
   return v / 3.6
 
@@ -51,18 +59,17 @@ def get_consumption(car: Car, v_ms: float) -> float:
 
 def _get_trip_duration(
   car: Car,
-  soc_start: float,
-  distance_km: float,
-  charging_penalty_time_h: float,
+  trip: Trip,
   v_kmh: float,
 ) -> float:
-  driving_time_h = distance_km / v_kmh
-  energy_needed_kwh = (get_consumption(car, kmh_to_ms(v_kmh)) * distance_km) / 100
-  energy_start_kwh = soc_start * car.capacity
-  energy_to_charge_kwh = max(0, energy_needed_kwh - energy_start_kwh)
+  driving_time_h = trip.distance_km / v_kmh
+  energy_needed_kwh = (get_consumption(car, kmh_to_ms(v_kmh)) * trip.distance_km) / 100
+  energy_start_kwh = trip.soc_start * car.capacity
+  energy_end_kwh = trip.soc_end * car.capacity
+  energy_to_charge_kwh = max(0, energy_needed_kwh + energy_end_kwh - energy_start_kwh)
   num_times_charging = ceil(energy_to_charge_kwh / car.capacity)
 
-  penalty = charging_penalty_time_h * num_times_charging if energy_to_charge_kwh > 0 else 0
+  penalty = trip.charging_penalty_time_h * num_times_charging if energy_to_charge_kwh > 0 else 0
   charging_time_h = (energy_to_charge_kwh / car.charging_power) + penalty
 
   return driving_time_h + charging_time_h
@@ -70,25 +77,34 @@ def _get_trip_duration(
 
 def plot_speed_vs_duration(
   car: Car,
-  soc_start: float,
   distance_km: float,
   charging_penalty_time_h: float,
+  soc_start: float,
+  soc_end: float,
 ) -> float:
   """Plots the speed over the duration.
 
   Args:
     car: Instance of a Car dataclass.
-    soc_start: Stat of charge []
+    soc_start: Stat of charge on trip beginning []
+    soc_end: Stat of charge on trip end []
     distance_km: The distance to cover [km]
     charging_penalty_time_h: Average time loss per charging
   """
+  trip = Trip(
+    distance_km=distance_km,
+    charging_penalty_time_h=charging_penalty_time_h,
+    soc_start=soc_start,
+    soc_end=soc_end,
+  )
+
   speeds_kmh = []
   times_h = []
   consumptions_kwh_100km = []
   for v_kmh in range(45, 211):
     speeds_kmh.append(v_kmh)
     times_h.append(
-      _get_trip_duration(car, soc_start, distance_km, charging_penalty_time_h, v_kmh),
+      _get_trip_duration(car, trip, v_kmh),
     )  # hours
     consumptions_kwh_100km.append(get_consumption(car, kmh_to_ms(v_kmh)))
 
@@ -107,7 +123,7 @@ def plot_speed_vs_duration(
     title="Total travel time over speed",
   )
   fig.update_layout(legend_title="Legend", showlegend=True, title="Constant speed")
-  fig.write_html("plot.html")
+  pio.write_image(fig, "plot.jpeg", format="jpeg", scale=2, width=1920, height=1920, validate=True)
 
 
 if __name__ == "__main__":
@@ -121,4 +137,21 @@ if __name__ == "__main__":
     cr=0.006,
     charging_power=220,
   )
-  plot_speed_vs_duration(cla250, soc_start=1, distance_km=1000, charging_penalty_time_h=0.2)
+  zoe = Car(
+    weight=1577,
+    area=2.27,
+    eta=0.85,
+    capacity=41,
+    p_additional=1300,
+    cw=0.33,
+    cr=0.012,
+    charging_power=22,
+  )
+
+  plot_speed_vs_duration(
+    cla250,
+    soc_start=1,
+    soc_end=0.05,
+    distance_km=1000,
+    charging_penalty_time_h=0.2,
+  )
