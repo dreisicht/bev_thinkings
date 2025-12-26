@@ -82,12 +82,12 @@ def plot_speed_vs_duration(
   soc_start: float,
   soc_end: float,
 ) -> float:
-  """Plots the speed over the duration.
+  """Plots total travel time over speed.
 
   Args:
     car: Instance of a Car dataclass.
-    soc_start: Stat of charge on trip beginning []
-    soc_end: Stat of charge on trip end []
+    soc_start: State of charge on trip beginning []
+    soc_end: State of charge on trip end []
     distance_km: The distance to cover [km]
     charging_penalty_time_h: Average time loss per charging
   """
@@ -115,15 +115,17 @@ def plot_speed_vs_duration(
     y="time",
     color="consumption",
     labels={
-      "speed": "Travel speed [km/h]",
+      "speed": "Travel speed [km/h] (constant)",
       "time": "Total trip time [h]",
       "consumption": "Energy consumption [kWh/100km]",
     },
     hover_data={"speed": ":.1f", "time": ":.2f", "consumption": ":.2f"},
     title="Total travel time over speed",
   )
-  fig.update_layout(legend_title="Legend", showlegend=True, title="Constant speed")
+  fig.update_layout(legend_title="Legend", showlegend=True, title="Total trip time over speed. Trip length: {} km. If charging is needed it is modeled by an average charging power of {} kW".format(distance_km, car.charging_power))
+
   pio.write_image(fig, "plot.jpeg", format="jpeg", scale=2, width=1920, height=1920, validate=True)
+  # fig.show() # uncomment to get interactive plot
 
 
 if __name__ == "__main__":
